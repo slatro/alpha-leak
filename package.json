@@ -1,0 +1,14 @@
+{
+  "name": "alpha-leak",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "vercel": "^53.4.0",
+    "viem": "^2.29.0"
+  }
+}

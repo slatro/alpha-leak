@@ -1,0 +1,59 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="outer-ring" x1="24" y1="18" x2="100" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FCFF"/>
+      <stop offset="0.3" stop-color="#9EE2FF"/>
+      <stop offset="0.72" stop-color="#74F0D3"/>
+      <stop offset="1" stop-color="#36A38A"/>
+    </linearGradient>
+    <linearGradient id="inner-ring" x1="38" y1="30" x2="90" y2="94" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#DFFBFF"/>
+      <stop offset="0.44" stop-color="#94EFFF"/>
+      <stop offset="1" stop-color="#5BE7BB"/>
+    </linearGradient>
+    <linearGradient id="beam-outer" x1="64" y1="64" x2="106" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A8FAFF" stop-opacity="0.08"/>
+      <stop offset="0.52" stop-color="#97F0FF" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#7DF0CE" stop-opacity="0.84"/>
+    </linearGradient>
+    <linearGradient id="beam-inner" x1="64" y1="64" x2="96" y2="49" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F6FDFF" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#B8FFF0" stop-opacity="0.72"/>
+    </linearGradient>
+    <radialGradient id="core-fill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(64 64) rotate(90) scale(12)">
+      <stop offset="0" stop-color="#EDFCFF"/>
+      <stop offset="0.46" stop-color="#BBF1FF"/>
+      <stop offset="1" stop-color="#6BEAC0"/>
+    </radialGradient>
+    <radialGradient id="beam-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(76 58) rotate(30) scale(36 28)">
+      <stop offset="0" stop-color="#8CF3FF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#8CF3FF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="logo-shadow" x="6" y="8" width="116" height="116" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="14" stdDeviation="12" flood-color="#020711" flood-opacity="0.34"/>
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#82D8FF" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#logo-shadow)">
+    <circle cx="64" cy="64" r="45.5" stroke="url(#outer-ring)" stroke-width="9.5" stroke-linecap="round" stroke-dasharray="218 88" transform="rotate(-29 64 64)"/>
+    <circle cx="64" cy="64" r="31.5" stroke="url(#inner-ring)" stroke-width="6.5" stroke-linecap="round" stroke-dasharray="126 72" transform="rotate(18 64 64)"/>
+
+    <ellipse cx="74.5" cy="57.5" rx="34" ry="26" fill="url(#beam-glow)"/>
+    <path d="M64 64L90.2 42.8A34.5 34.5 0 0 1 104.6 72.1L64 64Z" fill="url(#beam-outer)"/>
+    <path d="M64 64L86.4 46.6A28.4 28.4 0 0 1 97 68.3L64 64Z" fill="url(#beam-inner)"/>
+
+    <circle cx="64" cy="64" r="12" fill="#07111B"/>
+    <circle cx="64" cy="64" r="7.25" fill="url(#core-fill)"/>
+    <circle cx="64" cy="64" r="18.5" stroke="#DDFBFF" stroke-opacity="0.12" stroke-width="1.2"/>
+
+    <path d="M43.4 64H84.6" stroke="#E9FBFF" stroke-opacity="0.11" stroke-width="1"/>
+    <path d="M64 43.4V84.6" stroke="#E9FBFF" stroke-opacity="0.11" stroke-width="1"/>
+
+    <circle cx="92.8" cy="50.6" r="3.4" fill="#E7FDFF"/>
+    <circle cx="92.8" cy="50.6" r="8.2" stroke="#9CF8D9" stroke-opacity="0.24" stroke-width="1"/>
+
+    <path d="M30.5 88.8C36.8 99.7 47.3 107 60.8 109.7" stroke="url(#inner-ring)" stroke-opacity="0.72" stroke-width="5.2" stroke-linecap="round"/>
+    <circle cx="34.8" cy="89.6" r="2.6" fill="#BDF7FF" fill-opacity="0.84"/>
+  </g>
+</svg>
