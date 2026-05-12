@@ -399,10 +399,11 @@ function carryForwardToken(item) {
   if (!info) return false;
   const minutesSinceSeen = (Date.now() - (state.callRegistry[item.id]?.lastSeenAt || 0)) / 60000;
   const minutesSinceEntry = info.entryAt ? (Date.now() - info.entryAt) / 60000 : 0;
+  if (minutesSinceEntry > 120) return false;
   if (minutesSinceSeen <= 8) return true;
   if (minutesSinceEntry <= 90) return true;
   if (info.deltaPct >= 55) return false;
-  return minutesSinceEntry <= 240;
+  return minutesSinceEntry <= 120;
 }
 
 function formatRelative(minutes) {
@@ -2014,6 +2015,7 @@ function seededFreshTokenUniverse() {
   return seededOpportunities
     .filter((item) => item.module === "tokens")
     .filter((item) => item.raw || item.segment !== "CEX / Catalyst")
+    .filter((item) => !["token-unicurve", "token-punkpeg"].includes(item.id))
     .filter(isVisibleOpportunity)
     .filter((item) => !lowSignalSeedToken(item))
     .map((item) => ({ ...item }))
@@ -2094,6 +2096,11 @@ async function refreshLiveTokens() {
       .slice(0, 140)
       .map(buildLiveToken)
       .filter((item) => {
+        const seenAt = detectedAt(item);
+        if (!seenAt) return true;
+        return (Date.now() - seenAt) / 60000 <= 120;
+      })
+      .filter((item) => {
         const reg = state.callRegistry[item.id];
         if (!reg) return true;
         const now = Date.now();
@@ -2123,7 +2130,6 @@ async function refreshLiveTokens() {
       ...liveTokens,
       ...carried,
       ...preservedTierOneCatalysts,
-      ...freshSeedTokens,
     ]).slice(0, 120);
 
     opportunities = [...tokenUniverse, ...nonTokens];
