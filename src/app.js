@@ -1858,12 +1858,12 @@ function buildLiveToken(pair, index) {
   const vol1h = pair.volume?.h1 || 0;
   const volLiqRatio = liquidity > 0 ? vol1h / liquidity : 0;
   
-  // Alpha Zone only if volume is actually meaningful (e.g. > $10k)
-  const isAlphaZone = ageMinutes <= 25 && volLiqRatio > 0.35 && vol1h >= 10000;
-  // Elite Start only for serious professional volume ($30k+)
-  const isEliteStart = ageMinutes <= 15 && vol1h >= 30000;
+  // Alpha Zone (Red) - Professional Launch ($40k+)
+  const isAlphaZone = ageMinutes <= 15 && vol1h >= 40000;
+  // Elite Start (Gold) - Elite/God-tier Launch ($90k+)
+  const isEliteStart = ageMinutes <= 15 && vol1h >= 90000;
   
-  const score = Math.max(52, Math.min(95, Math.round(56 + volumePressure + buyPressure + trustBoost + (continuation.reclaimScore * 0.45) + (isAlphaZone ? 12 : 0) + (isEliteStart ? 18 : 0) - crowdPenalty - riskPenalty)));
+  const score = Math.max(52, Math.min(95, Math.round(56 + volumePressure + buyPressure + trustBoost + (continuation.reclaimScore * 0.45) + (isAlphaZone ? 12 : 0) + (isEliteStart ? 20 : 0) - crowdPenalty - riskPenalty)));
   
   const sourceLinks = [
     { label: `DEX ${pair.baseToken.symbol.toUpperCase()}`, url: pair.url },

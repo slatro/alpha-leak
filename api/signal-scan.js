@@ -34,15 +34,15 @@ function computeScore(pair) {
   // 1. VOLUME VELOCITY (The Alpha Zone Trigger)
   const volumeToLiqRatio = liq > 0 ? vol1h / liq : 0;
   
-  // Alpha Zone only if volume is actually meaningful (e.g. > $10k)
-  if (ageMin <= 15 && volumeToLiqRatio > 0.4 && vol1h >= 10000) {
-    score += 25; // Massive early conviction bonus
-  } else if (ageMin <= 30 && volumeToLiqRatio > 0.2 && vol1h >= 5000) {
+  // Alpha Zone (Red) - Professional Launch ($40k+)
+  if (ageMin <= 15 && vol1h >= 40000) {
+    score += 25; 
+  } else if (ageMin <= 30 && vol1h >= 20000) {
     score += 15;
   }
   
-  // Elite Start (The "Big Team" Signal)
-  if (ageMin <= 15 && vol1h >= 30000) {
+  // Elite Start (Gold) - Elite/God-tier Launch ($90k+)
+  if (ageMin <= 15 && vol1h >= 90000) {
     score += 20;
   }
 
