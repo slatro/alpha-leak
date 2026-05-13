@@ -85,6 +85,7 @@ const icons = {
   wallet: '<svg viewBox="0 0 24 24"><path d="M4.2 7.5a2.3 2.3 0 0 1 2.3-2.3h10.2a2.3 2.3 0 0 1 2.3 2.3v9a2.3 2.3 0 0 1-2.3 2.3H6.5a2.3 2.3 0 0 1-2.3-2.3Z"/><path d="M4.2 9.2h14.8"/><path d="M15.2 13h4.2v3.4h-4.2z"/><circle cx="16.9" cy="14.7" r="0.7" fill="currentColor" stroke="none"/></svg>',
   star: '<svg viewBox="0 0 24 24"><path d="M12 3.5l2.7 5.5 6.1.9-4.4 4.2 1 6-5.4-2.9-5.4 2.9 1-6-4.4-4.2 6.1-.9L12 3.5z"/></svg>',
   arrow: '<svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>',
+  copy: '<svg viewBox="0 0 24 24"><path d="M8 5a2 2 0 012-2h6a2 2 0 012 2v11a2 2 0 01-2 2h-6a2 2 0 01-2-2V5z"/><path d="M6 9H4v10a2 2 0 002 2h10v-2H6V9z"/></svg>',
 };
 
 
@@ -1509,7 +1510,14 @@ function contractChipMarkup(address = "", extraClass = "") {
   const safe = String(address || "").trim();
   if (!safe) return "";
   const className = ["contract-chip", extraClass].filter(Boolean).join(" ");
-  return `<span class="${className}" title="${safe}">${shortAddress(safe)}</span>`;
+  return `
+    <span class="${className}" title="${safe}">
+      <span>${shortAddress(safe)}</span>
+      <button class="copy-contract-btn" data-copy-contract="${safe}" type="button" aria-label="Copy contract address" title="Copy address">
+        ${icons.copy}
+      </button>
+    </span>
+  `;
 }
 
 function percent(value) {
@@ -3454,7 +3462,7 @@ function cardMarkup(item, index) {
         </div>
       </div>
       <div class="card-footer">
-        <span class="rank-badge">#${index + 1}</span>
+        <span class="rank-badge">#${index + 1} ${item.chainId?.toUpperCase() || ""}</span>
         <div class="source-row-links">
           ${cardLinks(item).map((link) => `<a href="${link.url}" target="_blank" rel="noreferrer">${link.label}</a>`).join("")}
         </div>
