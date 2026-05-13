@@ -3,7 +3,10 @@ import path from "path";
 import crypto from "crypto";
 import { env, hasSupabaseAdapter } from "./env.js";
 
-const localStorePath = path.join("/tmp", "alpha-leak-db.json");
+const isVercel = Boolean(process.env.VERCEL);
+const localStorePath = isVercel 
+  ? path.join("/tmp", "alpha-leak-db.json")
+  : path.join(process.cwd(), "db", "alpha-leak-db.json");
 
 function nowIso() {
   return new Date().toISOString();
@@ -17,11 +20,12 @@ async function readLocal() {
   try {
     return JSON.parse(await fs.readFile(localStorePath, "utf8"));
   } catch {
-    return { users: [], watchlist: [], nonces: [] };
+    return { users: [], watchlist: [], nonces: [], discoveries: [] };
   }
 }
 
 async function writeLocal(data) {
+  await fs.mkdir(path.dirname(localStorePath), { recursive: true }).catch(() => {});
   await fs.writeFile(localStorePath, JSON.stringify(data, null, 2), "utf8");
 }
 
@@ -122,6 +126,40 @@ async function updateProfileLocal(userId, patch) {
   return user;
 }
 
+async function recordDiscoveryLocal(item) {
+  const db = await readLocal();
+  if (!db.discoveries) db.discoveries = [];
+  
+  let entry = db.discoveries.find(d => d.id === item.id);
+  if (!entry) {
+    entry = {
+      id: item.id,
+      symbol: item.symbol,
+      first_seen: nowIso(),
+      initial_score: item.score,
+      max_score: item.score,
+      last_score: item.score,
+      pumps: 0,
+      updated_at: nowIso()
+    };
+    db.discoveries.push(entry);
+  } else {
+    if (item.score > entry.max_score) {
+      entry.pumps += 1;
+      entry.max_score = item.score;
+    }
+    entry.last_score = item.score;
+    entry.updated_at = nowIso();
+  }
+  await writeLocal(db);
+  return entry;
+}
+
+async function listDiscoveriesLocal(limit = 100) {
+  const db = await readLocal();
+  return (db.discoveries || []).sort((a, b) => a.updated_at < b.updated_at ? 1 : -1).slice(0, limit);
+}
+
 async function getUserByAddressSupabase(address) {
   const rows = await supabase(`profiles?address=eq.${encodeURIComponent(address)}&limit=1&select=*`, { method: "GET" });
   return rows?.[0] || null;
@@ -196,6 +234,8 @@ const adapter = hasSupabaseAdapter()
       storeNonce: storeNonceSupabase,
       consumeNonce: consumeNonceSupabase,
       updateProfile: updateProfileSupabase,
+      recordDiscovery: recordDiscoveryLocal,
+      listDiscoveries: listDiscoveriesLocal,
     }
   : {
       getUserByAddress: getUserByAddressLocal,
@@ -206,6 +246,8 @@ const adapter = hasSupabaseAdapter()
       storeNonce: storeNonceLocal,
       consumeNonce: consumeNonceLocal,
       updateProfile: updateProfileLocal,
+      recordDiscovery: recordDiscoveryLocal,
+      listDiscoveries: listDiscoveriesLocal,
     };
 
 export const storage = adapter;

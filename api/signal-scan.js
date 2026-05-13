@@ -2,6 +2,7 @@ import { json } from "./_lib/http.js";
 import { env } from "./_lib/env.js";
 import { telegramSendPhoto } from "./_lib/telegram.js";
 import { hasSent, markSent } from "./_lib/dispatch_store.js";
+import { storage } from "./_lib/storage.js";
 
 function safeNum(n) {
   const v = Number(n);
@@ -176,6 +177,14 @@ export default async function handler(event) {
     });
 
     await telegramSendPhoto({ photo: cardUrl.toString(), caption });
+    
+    // Record to permanent storage
+    await storage.recordDiscovery({
+      id,
+      symbol: pair.baseToken?.symbol || "Token",
+      score: item.score
+    });
+
     await markSent(dedupeKey, { score: item.score });
     sent.push({ id: dedupeKey, name, score: item.score });
   }
