@@ -1292,6 +1292,39 @@ function scoreSnapshot(items = []) {
   return Object.fromEntries(items.map((item) => [item.id, adjustedScore(item)]));
 }
 
+async function syncDiscoveryTimes() {
+  try {
+    const registry = await apiRequest("/api/discoveries", { method: "GET" });
+    if (registry && typeof registry === "object") {
+      state.detectedRegistry = { ...state.detectedRegistry, ...registry };
+      renderOpportunities();
+    }
+  } catch (err) {
+    console.warn("Failed to sync discovery times from MongoDB:", err);
+  }
+}
+
+// Global initialization
+async function init() {
+  renderModules();
+  renderFilters();
+  renderSorts();
+  renderProfile();
+  
+  // Initial render with cached/local data
+  renderOpportunities();
+  
+  // Sync centralized times from MongoDB
+  await syncDiscoveryTimes();
+  
+  // Existing polling...
+  setInterval(refreshData, 30000);
+  setInterval(updateScoreDeltasFromSnapshot, 5000);
+  setInterval(emitOpportunityNotifications, 5000);
+}
+
+init();
+
 function updateScoreDeltasFromSnapshot() {
   const next = scoreSnapshot(opportunities);
   Object.entries(next).forEach(([id, score]) => {

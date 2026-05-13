@@ -224,6 +224,8 @@ async function updateProfileSupabase(userId, patch) {
   return rows?.[0] || null;
 }
 
+import { recordDiscoveryMongo, listDiscoveriesMongo } from "./mongodb.js";
+
 const adapter = hasSupabaseAdapter()
   ? {
       getUserByAddress: getUserByAddressSupabase,
@@ -234,8 +236,8 @@ const adapter = hasSupabaseAdapter()
       storeNonce: storeNonceSupabase,
       consumeNonce: consumeNonceSupabase,
       updateProfile: updateProfileSupabase,
-      recordDiscovery: recordDiscoveryLocal,
-      listDiscoveries: listDiscoveriesLocal,
+      recordDiscovery: async (item) => (await recordDiscoveryMongo(item)) || recordDiscoveryLocal(item),
+      listDiscoveries: async (limit) => (await listDiscoveriesMongo(limit)) || listDiscoveriesLocal(limit),
     }
   : {
       getUserByAddress: getUserByAddressLocal,
@@ -246,8 +248,8 @@ const adapter = hasSupabaseAdapter()
       storeNonce: storeNonceLocal,
       consumeNonce: consumeNonceLocal,
       updateProfile: updateProfileLocal,
-      recordDiscovery: recordDiscoveryLocal,
-      listDiscoveries: listDiscoveriesLocal,
+      recordDiscovery: async (item) => (await recordDiscoveryMongo(item)) || recordDiscoveryLocal(item),
+      listDiscoveries: async (limit) => (await listDiscoveriesMongo(limit)) || listDiscoveriesLocal(limit),
     };
 
 export const storage = adapter;
