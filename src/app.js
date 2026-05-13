@@ -1387,9 +1387,9 @@ function emitOpportunityNotifications() {
     playNotificationTone("new");
     showCopyToast(label, 30000);
   } else {
-    // Check for significant score increases in existing tokens
+    // Check for significant score increases in existing tokens (at least +3 pts)
     const pumps = Object.entries(state.scoreDeltaMap)
-      .filter(([id, diff]) => diff >= 1 && notificationState.knownTokenIds.has(id))
+      .filter(([id, diff]) => diff >= 3 && notificationState.knownTokenIds.has(id))
       .sort((a, b) => b[1] - a[1]);
 
     if (pumps.length) {
