@@ -1850,11 +1850,11 @@ function buildLiveToken(pair, index) {
   const publicSignal = Math.min(90, Math.round((twitter ? 36 : 16) + (volume / 17000)));
   const walletSignal = Math.min(92, Math.max(36, buyBias + Math.round(buys / 135) + (liquidity > 40000 ? 4 : 0)));
   const trustBoost = (twitter ? 5 : 0) + (website ? 6 : 0) + (liquidity > 40000 ? 8 : liquidity > 16000 ? 4 : 0);
-  const volumePressure = Math.min(20, volume / 22000);
-  const buyPressure = Math.min(18, buys / 120);
-  const crowdPenalty = Math.max(0, (crowdLevel - 46) * 0.22);
-  const riskPenalty = Math.max(0, (risk - 52) * 0.18);
-  const score = Math.max(52, Math.min(95, Math.round(56 + volumePressure + buyPressure + trustBoost + (continuation.reclaimScore * 0.45) - crowdPenalty - riskPenalty)));
+  const vol1h = pair.volume?.h1 || 0;
+  const volLiqRatio = liquidity > 0 ? vol1h / liquidity : 0;
+  const isAlphaZone = ageMinutes <= 25 && volLiqRatio > 0.35;
+  
+  const score = Math.max(52, Math.min(95, Math.round(56 + volumePressure + buyPressure + trustBoost + (continuation.reclaimScore * 0.45) + (isAlphaZone ? 12 : 0) - crowdPenalty - riskPenalty)));
   
   const sourceLinks = [
     { label: `DEX ${pair.baseToken.symbol.toUpperCase()}`, url: pair.url },
@@ -1868,25 +1868,30 @@ function buildLiveToken(pair, index) {
     name: pair.baseToken.name,
     symbol: pair.baseToken.symbol,
     imageUrl: pair.info?.imageUrl || pair.info?.openGraph,
-    category: `${chainLabel(pair.chainId)} · ${liveTokenTheme(pair)}`,
+    category: `${chainLabel(pair.chainId)} · ${isAlphaZone ? "ALPHA ZONE SURGE" : liveTokenTheme(pair)}`,
     score,
+    isAlphaZone,
     freshness: early,
-    action: score > 87 && crowdLevel < 54 ? "Research Now" : score > 74 && continuation.reclaimLike ? "Research Now" : score > 76 ? "Small Entry Only" : risk > 88 ? "Watch" : "Watch",
+    action: isAlphaZone ? "RAPID ENTRY" : (score > 87 && crowdLevel < 54 ? "Research Now" : score > 74 && continuation.reclaimLike ? "Research Now" : score > 76 ? "Small Entry Only" : risk > 88 ? "Watch" : "Watch"),
     firstSeen: pair.pairCreatedAt ? `pair ${minutesAgo(pair.pairCreatedAt)} old` : "live pair",
     crowd: crowdLevel,
     xSignal: publicSignal,
     walletSignal,
     risk,
     liquidity: `${money(volume)} volume`,
-    volumeSpike: publicSignal > 62 ? "mentions and orderflow are both building" : "wallet flow is leading public discovery",
+    volumeSpike: isAlphaZone ? "EXTREME VOLUME VELOCITY DETECTED" : (publicSignal > 62 ? "mentions and orderflow are both building" : "wallet flow is leading public discovery"),
     discord: "N/A",
     guides: 0,
-    thesis: `${early} ${chainLabel(pair.chainId)} setup: wallet flow is ${walletSignal > crowdLevel ? "still ahead of crowd" : "close to public attention"}, and the setup is ${risk > 80 ? "higher risk because liquidity is thin" : "tradeable if flow keeps holding"}.`,
-    researchNote: continuation.reclaimLike
-      ? "Continuation setup detected: check whether price reclaimed after a quiet base, volume is re-accelerating, and wallets are still buying before broad attention."
-      : "Open the source link, check holders/makers, LP safety, contract risk, and whether real accounts are discussing it before any entry.",
+    thesis: isAlphaZone 
+      ? `RAPID VOLUME SURGE: This token is exploding in its first minutes. Volume/Liquidity ratio is ${volLiqRatio.toFixed(2)}, indicating heavy conviction.`
+      : `${early} ${chainLabel(pair.chainId)} setup: wallet flow is ${walletSignal > crowdLevel ? "still ahead of crowd" : "close to public attention"}, and the setup is ${risk > 80 ? "higher risk because liquidity is thin" : "tradeable if flow keeps holding"}.`,
+    researchNote: isAlphaZone
+      ? "ALPHA ZONE ALERT: High speed volume detected. Check contract security instantly and monitor orderbook for whale buys."
+      : (continuation.reclaimLike
+          ? "Continuation setup detected: check whether price reclaimed after a quiet base, volume is re-accelerating, and wallets are still buying before broad attention."
+          : "Open the source link, check holders/makers, LP safety, contract risk, and whether real accounts are discussing it before any entry."),
     links: sourceLinks,
-    positiveSignals: [walletSignal > 65 ? "Wallet pressure is stronger than crowd pressure" : "Still early enough to monitor", twitter ? "Direct X account surfaced" : "Low public link density", liquidity > 15000 ? "Enough depth to monitor seriously" : "Very early size still matters"],
+    positiveSignals: [isAlphaZone ? "Rapid volume growth" : "Still early enough to monitor", walletSignal > 65 ? "Wallet pressure is stronger than crowd pressure" : "Still early enough to monitor", twitter ? "Direct X account surfaced" : "Low public link density", liquidity > 15000 ? "Enough depth to monitor seriously" : "Very early size still matters"],
     negativeSignals: [liquidity < 5000 ? "Liquidity is extremely thin" : "Still microcap risk", crowdLevel > 65 ? "Crowd may already be arriving" : "Fresh pair can reverse instantly"],
     xIntel: { mentions1h: Math.round((twitter ? 18 : 6) + volume / 22000), mentions6h: Math.round((twitter ? 34 : 12) + volume / 14000), mentions24h: Math.round((twitter ? 70 : 20) + volume / 9000), quality: twitter ? 62 : website ? 52 : 42, botRate: twitter ? 16 : 26, influencerStarted: crowdLevel > 72 },
     walletIntel: { earlyEntries: Math.max(1, Math.round(buys / 420)), walletTypes: ["Fresh pair makers", "Fast wallets"], copyRisk: Math.min(92, risk - 22) },
@@ -3422,14 +3427,15 @@ function cardMarkup(item, index) {
   const contract = (item.module === "tokens" || item.module === "analyzer") ? tokenContractAddress(item) : "";
   const guest = isGuestMode();
   return `
-    <article class="alpha-card" data-card-id="${item.id}" data-module-theme="${item.module}" style="${themeVars(item.module)}">
+    <article class="alpha-card ${item.isAlphaZone ? "is-alpha-zone" : ""}" data-card-id="${item.id}" data-module-theme="${item.module}" style="${themeVars(item.module)}">
+      ${item.isAlphaZone ? '<div class="alpha-zone-badge">ALPHA ZONE</div>' : ''}
       <div class="card-main">
         <div class="card-title-row">
           <div class="card-identity">
             ${itemAvatar(item)}
             <div>
             <div class="card-kicker">
-              <span class="signal-tag ${actionClass[item.action]}">${item.action}</span>
+              <span class="signal-tag ${item.isAlphaZone ? "is-rapid" : actionClass[item.action]}">${item.isAlphaZone ? "RAPID SURGE" : item.action}</span>
               <em>${discoveryLabel(item)}</em>
             </div>
             <div class="card-name-line">

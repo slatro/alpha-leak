@@ -20,23 +20,48 @@ function fmtUsdCompact(n) {
 
 function computeScore(pair) {
   const vol24 = safeNum(pair?.volume?.h24);
+  const vol1h = safeNum(pair?.volume?.h1);
   const liq = safeNum(pair?.liquidity?.usd);
   const buys1h = safeNum(pair?.txns?.h1?.buys);
   const sells1h = safeNum(pair?.txns?.h1?.sells);
   const pc1h = Math.abs(safeNum(pair?.priceChange?.h1));
   const ageMin = pair?.pairCreatedAt ? Math.max(1, Math.round((Date.now() - pair.pairCreatedAt) / 60000)) : 9999;
-  const buyRatio = buys1h + sells1h ? buys1h / (buys1h + sells1h) : 0.5;
+  const buyRatio = (buys1h + sells1h) > 0 ? buys1h / (buys1h + sells1h) : 0.5;
 
-  // Early bias: prefer not-too-old, meaningful liquidity, and buy pressure without being fully vertical.
-  let score = 30;
-  score += Math.min(25, Math.log10(vol24 + 1) * 6);
-  score += Math.min(18, Math.log10(liq + 1) * 6);
-  score += Math.min(12, buys1h * 1.2);
-  score += buyRatio > 0.62 ? 8 : buyRatio > 0.55 ? 4 : 0;
-  score -= pc1h > 150 ? 18 : pc1h > 80 ? 10 : pc1h > 40 ? 4 : 0;
-  score -= ageMin > 240 ? 8 : ageMin > 120 ? 4 : 0;
-  score = Math.max(0, Math.min(100, Math.round(score)));
-  return score;
+  // BASE SCORE
+  let score = 35; 
+
+  // 1. VOLUME VELOCITY (The Alpha Zone Trigger)
+  // If volume is high relative to liquidity in the first 15 mins, it's a massive signal.
+  const volumeToLiqRatio = liq > 0 ? vol1h / liq : 0;
+  if (ageMin <= 15 && volumeToLiqRatio > 0.4) {
+    score += 25; // Massive early conviction bonus
+  } else if (ageMin <= 30 && volumeToLiqRatio > 0.2) {
+    score += 15;
+  }
+
+  // 2. MOMENTUM SCORING
+  score += Math.min(20, Math.log10(vol24 + 1) * 5);
+  score += Math.min(15, Math.log10(liq + 1) * 5);
+  score += Math.min(10, buys1h * 0.8);
+
+  // 3. BUY PRESSURE
+  if (buyRatio > 0.65) score += 12;
+  else if (buyRatio > 0.55) score += 6;
+
+  // 4. PENALTIES (Safety & Saturation)
+  // Vertical pumps are risky, but early volatility is expected.
+  if (ageMin > 15 && pc1h > 150) score -= 20; 
+  else if (ageMin > 15 && pc1h > 80) score -= 10;
+
+  // Over-saturation penalty
+  if (ageMin > 360) score -= 15;
+  else if (ageMin > 180) score -= 5;
+
+  // LIQUIDITY MINIMUM SAFETY
+  if (liq < 5000) score -= 20;
+
+  return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 function freshnessLabel(pair) {

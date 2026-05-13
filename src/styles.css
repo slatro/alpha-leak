@@ -2061,6 +2061,63 @@ main {
   border-radius: 8px;
   cursor: pointer;
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.alpha-card.is-alpha-zone {
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  box-shadow: 0 0 24px rgba(255, 107, 107, 0.18), 0 18px 46px rgba(0, 0, 0, 0.26);
+  background: 
+    linear-gradient(135deg, rgba(255, 107, 107, 0.14), transparent 44%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+    rgba(14, 11, 11, 0.96);
+}
+
+.alpha-card.is-alpha-zone::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ff6b6b, transparent);
+  animation: surge-scan 2.5s linear infinite;
+  z-index: 5;
+}
+
+@keyframes surge-scan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.alpha-zone-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4px 10px;
+  background: #ff6b6b;
+  color: white;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  font-weight: 900;
+  border-bottom-left-radius: 8px;
+  box-shadow: 0 4px 14px rgba(255, 107, 107, 0.4);
+  z-index: 10;
+  letter-spacing: 0.04em;
+  animation: pulse-surge 2s ease-in-out infinite;
+}
+
+@keyframes pulse-surge {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.88; transform: scale(1.04); }
+}
+
+.signal-tag.is-rapid {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff8e8e;
+  border: 1px solid rgba(255, 107, 107, 0.35);
+  box-shadow: 0 0 12px rgba(255, 107, 107, 0.1);
 }
 
 .alpha-card:hover {
