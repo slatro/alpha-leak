@@ -1387,21 +1387,26 @@ function emitOpportunityNotifications() {
     playNotificationTone("new");
     showCopyToast(label, 30000);
   } else {
-    // Check for significant score increases in existing tokens (at least +3 pts)
-    const pumps = Object.entries(state.scoreDeltaMap)
-      .filter(([id, diff]) => diff >= 3 && notificationState.knownTokenIds.has(id))
-      .sort((a, b) => b[1] - a[1]);
+    // Check for FRESH significant score increases in existing tokens (at least +3 pts)
+    const currentDeltas = Object.entries(state.scoreDeltaMap)
+      .filter(([id, diff]) => diff >= 3 && notificationState.knownTokenIds.has(id));
 
-    if (pumps.length) {
-      const [id, diff] = pumps[0];
-      const item = opportunities.find(o => o.id === id);
-      if (item) {
-        const label = `
-          <div class="toast-header">ALPHA SURGE DETECTED</div>
-          <div class="toast-body">${item.symbol} <span class="toast-pts-plus">+${diff} PTS</span></div>
-        `;
-        playNotificationTone("high");
-        showCopyToast(label, 25000);
+    // Only notify if this specific delta hasn't been notified yet
+    if (currentDeltas.length) {
+      const [id, diff] = currentDeltas[0];
+      const notifiedKey = `surge:${id}:${diff}:${notificationState.scoreSnapshot[id]}`;
+      
+      if (notificationState.lastNotifiedKey !== notifiedKey) {
+        const item = opportunities.find(o => o.id === id);
+        if (item) {
+          const label = `
+            <div class="toast-header">ALPHA SURGE DETECTED</div>
+            <div class="toast-body">${item.symbol} <span class="toast-pts-plus">+${diff} PTS</span></div>
+          `;
+          playNotificationTone("high");
+          showCopyToast(label, 25000);
+          notificationState.lastNotifiedKey = notifiedKey;
+        }
       }
     }
   }
