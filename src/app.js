@@ -1850,6 +1850,11 @@ function buildLiveToken(pair, index) {
   const publicSignal = Math.min(90, Math.round((twitter ? 36 : 16) + (volume / 17000)));
   const walletSignal = Math.min(92, Math.max(36, buyBias + Math.round(buys / 135) + (liquidity > 40000 ? 4 : 0)));
   const trustBoost = (twitter ? 5 : 0) + (website ? 6 : 0) + (liquidity > 40000 ? 8 : liquidity > 16000 ? 4 : 0);
+  const volumePressure = Math.min(20, volume / 22000);
+  const buyPressure = Math.min(18, buys / 120);
+  const crowdPenalty = Math.max(0, (crowdLevel - 46) * 0.22);
+  const riskPenalty = Math.max(0, (risk - 52) * 0.18);
+  
   const vol1h = pair.volume?.h1 || 0;
   const volLiqRatio = liquidity > 0 ? vol1h / liquidity : 0;
   const isAlphaZone = ageMinutes <= 25 && volLiqRatio > 0.35;
