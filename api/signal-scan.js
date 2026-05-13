@@ -18,7 +18,39 @@ function fmtUsdCompact(n) {
   return `$${v.toFixed(0)}`;
 }
 
-function computeScore(pair) {
+async function checkTokenSecurity(chain, address) {
+  try {
+    // Mapping for GoPlus chain IDs
+    const chainMap = { "ethereum": "1", "base": "8453", "bsc": "56", "arbitrum": "42161", "polygon": "137", "avalanche": "43114", "linea": "59144", "optimism": "10" };
+    const goChainId = chainMap[chain];
+    
+    let url = "";
+    if (chain === "solana") {
+      url = `https://api.gopluslabs.io/api/v1/solana/token_security?contract_addresses=${address}`;
+    } else if (goChainId) {
+      url = `https://api.gopluslabs.io/api/v1/token_security/${goChainId}?contract_addresses=${address}`;
+    } else {
+      return { safe: true, note: "Chain not supported for audit" };
+    }
+
+    const resp = await fetch(url);
+    const data = await resp.json();
+    const result = data?.result?.[address.toLowerCase()] || data?.result?.[address] || {};
+
+    if (result.is_honeypot === "1") return { safe: false, reason: "Honeypot Detected" };
+    const sellTax = parseFloat(result.sell_tax || "0");
+    if (sellTax > 0.15) return { safe: false, reason: `High Sell Tax (${(sellTax * 100).toFixed(0)}%)` };
+    if (result.is_blacklisted === "1") return { safe: false, reason: "Blacklist Active" };
+    
+    return { safe: true, result };
+  } catch (e) {
+    return { safe: true, note: "Audit failed, assuming safe" };
+  }
+}
+
+function computeScore(pair, security = { safe: true }) {
+  if (!security.safe) return 0; // REJECT HONEYPOTS IMMEDIATELY
+
   const vol24 = safeNum(pair?.volume?.h24);
   const vol1h = safeNum(pair?.volume?.h1);
   const liq = safeNum(pair?.liquidity?.usd);
@@ -56,16 +88,13 @@ function computeScore(pair) {
   else if (buyRatio > 0.55) score += 6;
 
   // 4. PENALTIES (Safety & Saturation)
-  // Vertical pumps are risky, but early volatility is expected.
   if (ageMin > 15 && pc1h > 150) score -= 20; 
-  else if (ageMin > 15 && pc1h > 80) score -= 10;
-
-  // Over-saturation penalty
   if (ageMin > 360) score -= 15;
-  else if (ageMin > 180) score -= 5;
-
-  // LIQUIDITY MINIMUM SAFETY
   if (liq < 5000) score -= 20;
+
+  // SECURITY BOOST (Verified but not honeypot)
+  if (security.result?.is_open_source === "1") score += 5;
+  if (security.result?.is_proxy === "1") score -= 10;
 
   return Math.max(0, Math.min(100, Math.round(score)));
 }
@@ -155,14 +184,18 @@ export default async function handler(event) {
     .filter((p) => p?.pairAddress && p?.baseToken?.address);
 
   // Rank candidates by score and take top few to notify.
-  const ranked = pairs
-    .map((pair) => {
-      const score = computeScore(pair);
+  const rankedWithSecurity = await Promise.all(
+    pairs.map(async (pair) => {
+      const security = await checkTokenSecurity(pair.chainId, pair.baseToken.address);
+      const score = computeScore(pair, security);
       const freshness = freshnessLabel(pair);
       const action = actionLabel(score, freshness);
-      return { pair, score, freshness, action };
+      return { pair, score, freshness, action, security };
     })
-    .filter((x) => x.score >= threshold)
+  );
+
+  const ranked = rankedWithSecurity
+    .filter((x) => x.score >= threshold && x.security.safe)
     .sort((a, b) => b.score - a.score)
     .slice(0, 6);
 

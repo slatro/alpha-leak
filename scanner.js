@@ -14,36 +14,57 @@ function safeNum(n) {
   return Number.isFinite(v) ? v : 0;
 }
 
-function computeScore(pair) {
-  const vol24 = safeNum(pair?.volume?.h24);
+async function checkTokenSecurity(chain, address) {
+  try {
+    const chainMap = { "ethereum": "1", "base": "8453", "bsc": "56", "arbitrum": "42161", "polygon": "137", "avalanche": "43114", "linea": "59144", "optimism": "10" };
+    const goChainId = chainMap[chain];
+    let url = chain === "solana" 
+      ? `https://api.gopluslabs.io/api/v1/solana/token_security?contract_addresses=${address}`
+      : (goChainId ? `https://api.gopluslabs.io/api/v1/token_security/${goChainId}?contract_addresses=${address}` : "");
+
+    if (!url) return { safe: true };
+    const resp = await fetch(url);
+    const data = await resp.json();
+    const result = data?.result?.[address.toLowerCase()] || data?.result?.[address] || {};
+
+    if (result.is_honeypot === "1") return { safe: false, reason: "Honeypot" };
+    const sellTax = parseFloat(result.sell_tax || "0");
+    if (sellTax > 0.15) return { safe: false, reason: "High Tax" };
+    
+    return { safe: true, result };
+  } catch (e) {
+    return { safe: true };
+  }
+}
+
+function computeScore(pair, security = { safe: true }) {
+  if (!security.safe) return 0;
+  
   const vol1h = safeNum(pair?.volume?.h1);
   const liq = safeNum(pair?.liquidity?.usd);
   const buys1h = safeNum(pair?.txns?.h1?.buys);
   const sells1h = safeNum(pair?.txns?.h1?.sells);
-  const pc1h = Math.abs(safeNum(pair?.priceChange?.h1));
   const ageMin = pair?.pairCreatedAt ? Math.max(1, Math.round((Date.now() - pair.pairCreatedAt) / 60000)) : 9999;
   const buyRatio = (buys1h + sells1h) > 0 ? buys1h / (buys1h + sells1h) : 0.5;
 
-  let score = 35; // Alpha Zone Base
+  let score = 35; 
 
-  // 1. VOLUME VELOCITY (The Alpha Zone Trigger)
-  const volumeToLiqRatio = liq > 0 ? vol1h / liq : 0;
-  if (ageMin <= 15 && volumeToLiqRatio > 0.4) {
-    score += 25; // Rapid Surge Bonus
-  } else if (ageMin <= 30 && volumeToLiqRatio > 0.2) {
-    score += 15;
+  // Alpha Zone (Red) - $40K+ in first 15 mins
+  if (ageMin <= 15 && vol1h >= 40000) {
+    score += 25;
+  }
+  
+  // Elite Start (Gold) - $90K+ in first 15 mins
+  if (ageMin <= 15 && vol1h >= 90000) {
+    score += 20;
   }
 
-  score += Math.min(20, Math.log10(vol24 + 1) * 5);
+  score += Math.min(20, Math.log10(vol1h + 1) * 5);
   score += Math.min(15, Math.log10(liq + 1) * 5);
-  score += Math.min(10, buys1h * 0.8);
-
+  
   if (buyRatio > 0.65) score += 12;
-  else if (buyRatio > 0.55) score += 6;
-
-  if (ageMin > 15 && pc1h > 150) score -= 20; 
-  if (ageMin > 360) score -= 15;
   if (liq < 5000) score -= 20;
+  if (security.result?.is_open_source === "1") score += 5;
 
   return Math.max(0, Math.min(100, Math.round(score)));
 }
@@ -51,12 +72,15 @@ function computeScore(pair) {
 async function sendTelegram(item) {
   if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
   
-  const cardUrl = `${APP_BASE_URL}/api/telegram/card?name=${encodeURIComponent(item.name)}&score=${item.score}&freshness=${item.isAlphaZone ? "SURGE" : "Early"}&action=${item.isAlphaZone ? "RAPID" : "Research"}&mcap=N/A&vol24h=N/A&captured=${new Date().toISOString().slice(11, 16)}`;
+  const label = item.isEliteStart ? "🏆 ELITE START" : (item.isAlphaZone ? "⚡ ALPHA ZONE" : "🔍 NEW ALPHA");
+  const action = item.isEliteStart ? "HIGH CONVICTION" : (item.isAlphaZone ? "RAPID ENTRY" : "WATCH");
   
-  const caption = `ALPHA ZONE | ${item.isAlphaZone ? "⚡ RAPID SURGE" : "🔍 NEW ALPHA"}\n\n` +
+  const cardUrl = `${APP_BASE_URL}/api/telegram/card?name=${encodeURIComponent(item.name)}&score=${item.score}&freshness=${item.isEliteStart ? "ELITE" : "SURGE"}&action=${action}&mcap=N/A&vol24h=N/A&captured=${new Date().toISOString().slice(11, 16)}`;
+  
+  const caption = `${label} | ${action}\n\n` +
                   `${item.name} ($${item.symbol})\n` +
                   `Score: ${item.score}\n` +
-                  `Status: ${item.isAlphaZone ? "Extreme Velocity Detected" : "Building Momentum"}\n\n` +
+                  `Initial Vol: $${item.vol1h.toLocaleString()}\n\n` +
                   `DEX: ${item.dexUrl}`;
 
   const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`;
@@ -73,13 +97,12 @@ async function sendTelegram(item) {
 
 async function scan() {
   try {
-    const [latestBoosts, topBoosts, latestProfiles] = await Promise.all([
+    const [latestBoosts, latestProfiles] = await Promise.all([
       fetch("https://api.dexscreener.com/token-boosts/latest/v1").then(r => r.json()).catch(() => []),
-      fetch("https://api.dexscreener.com/token-boosts/top/v1").then(r => r.json()).catch(() => []),
       fetch("https://api.dexscreener.com/token-profiles/latest/v1").then(r => r.json()).catch(() => [])
     ]);
 
-    const all = [...latestBoosts, ...topBoosts, ...latestProfiles];
+    const all = [...latestBoosts, ...latestProfiles];
     const grouped = {};
     all.forEach(p => {
       const cid = p.chainId;
@@ -102,19 +125,29 @@ async function scan() {
     for (const pair of pairs) {
       const id = `${pair.chainId}:${pair.pairAddress}`;
       const existing = await discoveries.findOne({ id });
-      
-      const score = computeScore(pair);
-      const vol1h = pair.volume?.h1 || 0;
-      const liq = pair.liquidity?.usd || 0;
-      const ageMin = pair.pairCreatedAt ? Math.max(1, Math.round((Date.now() - pair.pairCreatedAt) / 60000)) : 9999;
-      const isAlphaZone = ageMin <= 25 && (vol1h / liq) > 0.35;
+      if (existing) continue;
 
-      if (!existing && score >= 70) {
+      // Security Audit First
+      const security = await checkTokenSecurity(pair.chainId, pair.baseToken.address);
+      if (!security.safe) {
+        console.log(`[REJECTED] ${pair.baseToken.symbol} - ${security.reason}`);
+        continue;
+      }
+      
+      const score = computeScore(pair, security);
+      const vol1h = pair.volume?.h1 || 0;
+      const ageMin = pair.pairCreatedAt ? Math.max(1, Math.round((Date.now() - pair.pairCreatedAt) / 60000)) : 9999;
+      
+      const isAlphaZone = ageMin <= 15 && vol1h >= 40000;
+      const isEliteStart = ageMin <= 15 && vol1h >= 90000;
+
+      if (isAlphaZone || isEliteStart || score >= 75) {
         await discoveries.insertOne({
           id,
           symbol: pair.baseToken.symbol,
           score,
           isAlphaZone,
+          isEliteStart,
           discoveryTime: new Date().toISOString().slice(11, 16)
         });
 
@@ -123,6 +156,8 @@ async function scan() {
           symbol: pair.baseToken.symbol,
           score,
           isAlphaZone,
+          isEliteStart,
+          vol1h,
           dexUrl: pair.url
         });
       }
@@ -135,7 +170,7 @@ async function scan() {
 }
 
 async function main() {
-  console.log("[ALPHA LEAK] Predator Scanner v7 Booting...");
+  console.log("[ALPHA LEAK] Predator v8.1 ($40K/$90K) Booting...");
   while (true) {
     await scan();
     await new Promise(r => setTimeout(r, 15000));
