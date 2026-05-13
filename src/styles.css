@@ -6205,22 +6205,35 @@ body.has-detail-overlay {
 .score-delta {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 12px;
-  height: 12px;
-  margin-right: 3px;
+  gap: 3px;
+  margin-right: 8px;
+  padding: 2px 5px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
   font-family: var(--mono);
-  font-size: 0.58rem;
+  font-size: 0.64rem;
   font-weight: 900;
   line-height: 1;
+  animation: deltaPulse 2s infinite ease-in-out;
+}
+
+@keyframes deltaPulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.score-delta-svg {
+  filter: drop-shadow(0 0 5px currentColor);
 }
 
 .score-delta.up {
   color: #63ef9d;
+  background: rgba(99, 239, 157, 0.08);
 }
 
 .score-delta.down {
   color: #ff6d88;
+  background: rgba(255, 109, 136, 0.08);
 }
 
 .watch-star.is-locked {

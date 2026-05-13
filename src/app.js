@@ -678,12 +678,17 @@ function scoreBadgeVars(score) {
 }
 
 function scoreDeltaMarkup(id) {
-  const delta = state.scoreDeltaMap[id];
+  const delta = state.scoreDeltaMap ? state.scoreDeltaMap[id] : null;
   if (!delta) return "";
+  const svg = delta > 0
+    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="score-delta-svg"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>`
+    : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="score-delta-svg"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline><polyline points="16 17 22 17 22 11"></polyline></svg>`;
+  const sign = delta > 0 ? "+" : "";
   return `
-    <span class="score-delta ${delta > 0 ? "up" : "down"}" aria-label="${delta > 0 ? "Score moved up" : "Score moved down"}">
-      ${delta > 0 ? "↗" : "↘"}
-    </span>
+    <div class="score-delta ${delta > 0 ? "up" : "down"}" aria-label="${delta > 0 ? "Score moved up" : "Score moved down"}">
+      <span class="delta-val">${sign}${delta}</span>
+      ${svg}
+    </div>
   `;
 }
 
