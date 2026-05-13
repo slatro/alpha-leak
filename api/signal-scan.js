@@ -49,10 +49,14 @@ async function checkTokenSecurity(chain, address) {
 }
 
 function computeScore(pair, security = { safe: true }) {
-  if (!security.safe) return 0; // REJECT HONEYPOTS IMMEDIATELY
+  if (!security.safe) return 0; // REJECT HONEYPOTS
+  
+  // GHOST HONEYPOT CHECK: If volume is high but holders are near zero (professional scam)
+  const holderCount = parseInt(security.result?.holder_count || "0");
+  const vol1h = safeNum(pair?.volume?.h1);
+  if (vol1h > 10000 && holderCount < 10) return 0; // High volume + no holders = Scam
 
   const vol24 = safeNum(pair?.volume?.h24);
-  const vol1h = safeNum(pair?.volume?.h1);
   const liq = safeNum(pair?.liquidity?.usd);
   const buys1h = safeNum(pair?.txns?.h1?.buys);
   const sells1h = safeNum(pair?.txns?.h1?.sells);
@@ -91,8 +95,9 @@ function computeScore(pair, security = { safe: true }) {
   if (ageMin > 15 && pc1h > 150) score -= 20; 
   if (ageMin > 360) score -= 15;
   if (liq < 5000) score -= 20;
+  if (holderCount > 0 && holderCount < 50) score -= 15; // Low holder diversity penalty
 
-  // SECURITY BOOST (Verified but not honeypot)
+  // SECURITY BOOST
   if (security.result?.is_open_source === "1") score += 5;
   if (security.result?.is_proxy === "1") score -= 10;
 
