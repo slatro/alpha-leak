@@ -1057,11 +1057,10 @@ function harshAlphaEligible(item) {
     const liq = item.raw?.liquidity || 0;
     const vol = item.raw?.volume24h || item.marketRaw?.volume24h || 0;
     return (
-      (item.raw ? liq >= 3500 && vol >= 2500 : true)
-      && walletEdge >= 6
-      && item.crowd <= 62
-      && (hasOfficialSurface(item) || hasTierOneListingSignal(item))
-      && (breakdown.trust >= 48 || breakdown.catalystQuality >= 64)
+      (item.raw ? liq >= 1000 && vol >= 1000 : true)
+      && walletEdge >= 0
+      && item.crowd <= 75
+      && (breakdown.trust >= 30 || breakdown.catalystQuality >= 40 || hasOfficialSurface(item))
     );
   }
 
@@ -2098,7 +2097,7 @@ async function refreshLiveTokens() {
       .filter((item) => {
         const seenAt = detectedAt(item);
         if (!seenAt) return true;
-        return (Date.now() - seenAt) / 60000 <= 120;
+        return (Date.now() - seenAt) / 60000 <= 360;
       })
       .filter((item) => {
         const reg = state.callRegistry[item.id];
