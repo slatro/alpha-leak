@@ -737,6 +737,8 @@ h3 {
   color: #eef4ff;
 }
 
+
+
 .copy-contract-button {
   display: inline-flex;
   align-items: center;
@@ -762,37 +764,120 @@ h3 {
 
 .copy-toast {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 140;
-  display: inline-flex;
+  right: 28px;
+  top: 130px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  min-height: 100px;
+  padding: 0;
+  border: 1px solid rgba(130, 216, 255, 0.35);
+  border-radius: 12px;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(10, 14, 22, 0.95);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(130, 216, 255, 0.1);
+  opacity: 0;
+  transform: translateX(30px);
+  pointer-events: auto;
+  transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.toast-content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  flex: 1;
+  padding: 20px;
+  gap: 8px;
+}
+
+.toast-header {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1rem;
+  color: #8fa1b9;
+  text-transform: uppercase;
+}
+
+.toast-body {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  color: #fff;
+  font-family: var(--display);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: -0.02rem;
+}
+
+.toast-pts {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: #82d8ff;
+  opacity: 0.8;
+}
+
+.toast-pts-plus {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #63ef9d;
+  text-shadow: 0 0 10px rgba(99, 239, 157, 0.4);
+}
+
+.toast-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 82px;
-  height: 34px;
-  padding: 0 14px;
-  border: 1px solid rgba(196, 209, 255, 0.16);
-  border-radius: 10px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)),
-    rgba(12, 16, 24, 0.9);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 18px 36px rgba(0, 0, 0, 0.28);
-  color: #edf6ff;
-  font-family: var(--mono);
-  font-size: 0.64rem;
-  font-weight: 800;
-  letter-spacing: 0;
-  opacity: 0;
-  transform: translateY(10px);
-  pointer-events: none;
-  transition: opacity 160ms ease, transform 160ms ease;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: #5c6d84;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toast-close:hover {
+  color: #fff;
+  background: rgba(255, 109, 136, 0.2);
+  border-color: rgba(255, 109, 136, 0.3);
+}
+
+.toast-close svg {
+  width: 12px;
+  height: 12px;
+}
+
+.toast-progress {
+  height: 5px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+#toastProgressBar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #63ef9d, #82d8ff);
+  box-shadow: 0 0 12px rgba(130, 216, 255, 0.5);
 }
 
 .copy-toast.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(0);
 }
 
 .account-overlay {
@@ -2253,14 +2338,14 @@ main {
 
 .thesis {
   display: -webkit-box;
-  min-height: 52px;
+  min-height: 42px;
   margin: 10px 0;
   overflow: hidden;
   color: #b4bdca;
   font-size: 0.76rem;
   line-height: 1.45;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
 }
 
 .card-visuals {
@@ -4037,9 +4122,10 @@ body.has-detail-overlay {
 }
 
 .thesis {
-  min-height: 44px;
+  min-height: 40px;
   margin: 8px 0;
   font-size: 0.74rem;
+  -webkit-line-clamp: 2;
 }
 
 .mini-metrics {
@@ -6202,38 +6288,48 @@ body.has-detail-overlay {
   text-transform: uppercase;
 }
 
+.score-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .score-delta {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 3px;
-  margin-right: 8px;
-  padding: 2px 5px;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 4px;
-  font-family: var(--mono);
-  font-size: 0.64rem;
-  font-weight: 900;
-  line-height: 1;
+  justify-content: center;
+  gap: 0;
+  min-width: 24px;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
   animation: deltaPulse 2s infinite ease-in-out;
 }
 
 @keyframes deltaPulse {
-  0%, 100% { opacity: 0.85; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
+  0%, 100% { opacity: 0.7; filter: drop-shadow(0 0 6px currentColor); }
+  50% { opacity: 1; filter: drop-shadow(0 0 16px currentColor); }
+}
+
+.delta-val {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 900;
+  margin-bottom: -5px;
+  text-shadow: 0 0 12px currentColor;
 }
 
 .score-delta-svg {
-  filter: drop-shadow(0 0 5px currentColor);
+  filter: drop-shadow(0 0 8px currentColor);
 }
 
 .score-delta.up {
   color: #63ef9d;
-  background: rgba(99, 239, 157, 0.08);
 }
 
 .score-delta.down {
   color: #ff6d88;
-  background: rgba(255, 109, 136, 0.08);
 }
 
 .watch-star.is-locked {

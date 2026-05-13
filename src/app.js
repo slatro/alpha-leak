@@ -84,7 +84,10 @@ const icons = {
   x: '<svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>',
   wallet: '<svg viewBox="0 0 24 24"><path d="M4.2 7.5a2.3 2.3 0 0 1 2.3-2.3h10.2a2.3 2.3 0 0 1 2.3 2.3v9a2.3 2.3 0 0 1-2.3 2.3H6.5a2.3 2.3 0 0 1-2.3-2.3Z"/><path d="M4.2 9.2h14.8"/><path d="M15.2 13h4.2v3.4h-4.2z"/><circle cx="16.9" cy="14.7" r="0.7" fill="currentColor" stroke="none"/></svg>',
   star: '<svg viewBox="0 0 24 24"><path d="M12 3.5l2.7 5.5 6.1.9-4.4 4.2 1 6-5.4-2.9-5.4 2.9 1-6-4.4-4.2 6.1-.9L12 3.5z"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>',
 };
+
+
 
 // Wallet discovery uses EIP-6963 (announceProvider) when available. This avoids mock data and
 // surfaces real wallet names + icons directly from installed providers.
@@ -260,19 +263,37 @@ function ensureCopyToast() {
   toast = document.createElement("div");
   toast.id = "copyToast";
   toast.className = "copy-toast";
-  toast.textContent = "Copied";
+  toast.innerHTML = `
+    <div class="toast-content">
+      <span id="toastLabel"></span>
+      <button class="toast-close" type="button" aria-label="Close" onclick="this.closest('.copy-toast').classList.remove('is-visible')">${icons.x}</button>
+    </div>
+    <div class="toast-progress"><div id="toastProgressBar"></div></div>
+  `;
   document.body.appendChild(toast);
   return toast;
 }
 
-function showCopyToast(label = "Copied") {
+function showCopyToast(htmlContent = "Copied", duration = 1100) {
   const toast = ensureCopyToast();
-  toast.textContent = label;
+  const labelEl = document.getElementById("toastLabel");
+  const progressEl = document.getElementById("toastProgressBar");
+  if (labelEl) labelEl.innerHTML = htmlContent;
+  
   toast.classList.add("is-visible");
+  if (progressEl) {
+    progressEl.style.transition = "none";
+    progressEl.style.width = "100%";
+    setTimeout(() => {
+      progressEl.style.transition = `width ${duration}ms linear`;
+      progressEl.style.width = "0%";
+    }, 10);
+  }
+
   clearTimeout(copyToastTimer);
   copyToastTimer = window.setTimeout(() => {
     toast.classList.remove("is-visible");
-  }, 1100);
+  }, duration);
 }
 
 function saveDetectedRegistry() {
@@ -681,8 +702,8 @@ function scoreDeltaMarkup(id) {
   const delta = state.scoreDeltaMap ? state.scoreDeltaMap[id] : null;
   if (!delta) return "";
   const svg = delta > 0
-    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="score-delta-svg"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>`
-    : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="score-delta-svg"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline><polyline points="16 17 22 17 22 11"></polyline></svg>`;
+    ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="score-delta-svg"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>`
+    : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="score-delta-svg"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline><polyline points="16 17 22 17 22 11"></polyline></svg>`;
   const sign = delta > 0 ? "+" : "";
   return `
     <div class="score-delta ${delta > 0 ? "up" : "down"}" aria-label="${delta > 0 ? "Score moved up" : "Score moved down"}">
@@ -1273,13 +1294,17 @@ function scoreSnapshot(items = []) {
 
 function updateScoreDeltasFromSnapshot() {
   const next = scoreSnapshot(opportunities);
-  const deltas = {};
   Object.entries(next).forEach(([id, score]) => {
     const previous = notificationState.scoreSnapshot[id];
-    if (typeof previous !== "number" || previous === score) return;
-    deltas[id] = score - previous;
+    if (typeof previous === "number" && previous !== score) {
+      const diff = score - previous;
+      state.scoreDeltaMap[id] = diff;
+      // Persist this indicator for 30 minutes
+      setTimeout(() => {
+        delete state.scoreDeltaMap[id];
+      }, 1800000);
+    }
   });
-  state.scoreDeltaMap = deltas;
   notificationState.scoreSnapshot = next;
 }
 
@@ -1311,12 +1336,12 @@ function playNotificationTone(kind = "new") {
   const start = ctx.currentTime + 0.01;
   const notes = kind === "high"
     ? [
-      { freq: 880, dur: 0.08, gain: 0.022 },
-      { freq: 1244, dur: 0.11, gain: 0.025, offset: 0.085 },
+      { freq: 880, dur: 0.08, gain: 0.12 },
+      { freq: 1244, dur: 0.11, gain: 0.15, offset: 0.085 },
     ]
     : [
-      { freq: 698, dur: 0.07, gain: 0.018 },
-      { freq: 932, dur: 0.06, gain: 0.014, offset: 0.06 },
+      { freq: 698, dur: 0.07, gain: 0.08 },
+      { freq: 932, dur: 0.06, gain: 0.06, offset: 0.06 },
     ];
   notes.forEach((note) => {
     const osc = ctx.createOscillator();
@@ -1337,7 +1362,7 @@ function emitOpportunityNotifications() {
   const highScoreIds = new Set(
     opportunities
       .filter((item) => ["tokens", "nfts"].includes(item.module))
-      .filter((item) => adjustedScore(item) >= 80)
+      .filter((item) => adjustedScore(item) >= 70)
       .map((item) => item.id)
   );
   if (!notificationState.primed) {
@@ -1347,11 +1372,39 @@ function emitOpportunityNotifications() {
     return;
   }
   const newTokens = [...tokenIds].filter((id) => !notificationState.knownTokenIds.has(id));
-  const newHighScores = [...highScoreIds].filter((id) => !notificationState.knownHighScoreIds.has(id));
+  
+  // Update state immediately to avoid repeat triggers
   notificationState.knownTokenIds = tokenIds;
   notificationState.knownHighScoreIds = highScoreIds;
-  if (newHighScores.length) playNotificationTone("high");
-  else if (newTokens.length) playNotificationTone("new");
+
+  if (newTokens.length) {
+    const item = opportunities.find(o => o.id === newTokens[0]);
+    const score = adjustedScore(item);
+    const label = `
+      <div class="toast-header">NEW ALPHA DISCOVERY</div>
+      <div class="toast-body">${item?.symbol || "Token"} <span class="toast-pts">${score}pts</span></div>
+    `;
+    playNotificationTone("new");
+    showCopyToast(label, 30000);
+  } else {
+    // Check for significant score increases in existing tokens
+    const pumps = Object.entries(state.scoreDeltaMap)
+      .filter(([id, diff]) => diff >= 1 && notificationState.knownTokenIds.has(id))
+      .sort((a, b) => b[1] - a[1]);
+
+    if (pumps.length) {
+      const [id, diff] = pumps[0];
+      const item = opportunities.find(o => o.id === id);
+      if (item) {
+        const label = `
+          <div class="toast-header">ALPHA SURGE DETECTED</div>
+          <div class="toast-body">${item.symbol} <span class="toast-pts-plus">+${diff} PTS</span></div>
+        `;
+        playNotificationTone("high");
+        showCopyToast(label, 25000);
+      }
+    }
+  }
 }
 
 function money(value) {
@@ -1623,7 +1676,7 @@ function sectionHeading(title) {
   return `
     <div class="section-title">
       <h4>${title}</h4>
-      <i aria-hidden="true"></i>
+      <i aria-hidden="true">${icons.arrow}</i>
     </div>
   `;
 }
@@ -1737,7 +1790,7 @@ function buildLiveToken(pair, index) {
   const crowdPenalty = Math.max(0, (crowdLevel - 46) * 0.22);
   const riskPenalty = Math.max(0, (risk - 52) * 0.18);
   const score = Math.max(52, Math.min(95, Math.round(56 + volumePressure + buyPressure + trustBoost + (continuation.reclaimScore * 0.45) - crowdPenalty - riskPenalty)));
-  const continuationTag = continuation.reclaimLike ? "quiet reclaim flow is building after base" : "";
+  
   const sourceLinks = [
     { label: `DEX ${pair.baseToken.symbol.toUpperCase()}`, url: pair.url },
     twitter ? { label: "X", url: twitter } : website ? { label: "Website", url: website } : null,
@@ -1748,7 +1801,7 @@ function buildLiveToken(pair, index) {
     id: `live-token-${pair.chainId}-${pair.pairAddress || pair.baseToken.address}`,
     module: "tokens",
     name: pair.baseToken.name,
-    symbol: `${pair.baseToken.symbol}/${pair.quoteToken.symbol}`,
+    symbol: pair.baseToken.symbol,
     imageUrl: pair.info?.imageUrl || pair.info?.openGraph,
     category: `${chainLabel(pair.chainId)} · ${liveTokenTheme(pair)}`,
     score,
@@ -1763,7 +1816,7 @@ function buildLiveToken(pair, index) {
     volumeSpike: publicSignal > 62 ? "mentions and orderflow are both building" : "wallet flow is leading public discovery",
     discord: "N/A",
     guides: 0,
-    thesis: `${early} ${chainLabel(pair.chainId)} setup: wallet flow is ${walletSignal > crowdLevel ? "still ahead of crowd" : "close to public attention"}, and the setup is ${risk > 80 ? "higher risk because liquidity is thin" : "tradeable if flow keeps holding"}${continuationTag ? ` while ${continuationTag}` : ""}.`,
+    thesis: `${early} ${chainLabel(pair.chainId)} setup: wallet flow is ${walletSignal > crowdLevel ? "still ahead of crowd" : "close to public attention"}, and the setup is ${risk > 80 ? "higher risk because liquidity is thin" : "tradeable if flow keeps holding"}.`,
     researchNote: continuation.reclaimLike
       ? "Continuation setup detected: check whether price reclaimed after a quiet base, volume is re-accelerating, and wallets are still buying before broad attention."
       : "Open the source link, check holders/makers, LP safety, contract risk, and whether real accounts are discussing it before any entry.",
@@ -1783,15 +1836,7 @@ function buildLiveToken(pair, index) {
       fdv,
       buys1h: buys,
       sells1h: sells,
-      buys24h: pair.txns?.h24?.buys || 0,
-      sells24h: pair.txns?.h24?.sells || 0,
-      volume24h: volume,
-      liquidity,
-      priceChange1h: pair.priceChange?.h1 || 0,
-      priceChange24h: pair.priceChange?.h24 || 0,
-      volLiq: liquidity ? volume / liquidity : 0,
-      reclaimScore: continuation.reclaimScore,
-    },
+    }
   };
 }
 
@@ -3334,7 +3379,10 @@ function cardMarkup(item, index) {
               <button class="watch-star ${isWatched(item.id) ? "is-watched" : ""} ${guest ? "is-locked" : ""}" data-watch-id="${item.id}" type="button" aria-label="${guest ? "Login required" : isWatched(item.id) ? "Remove from watchlist" : "Add to watchlist"}" title="${guest ? "Login required" : "Watchlist"}">
                 ${icons.star}
               </button>
-              <span class="card-score-pill" style="${scoreBadgeVars(score)}">${scoreDeltaMarkup(item.id)}<strong>${score}</strong></span>
+              <div class="score-pill-group">
+                ${scoreDeltaMarkup(item.id)}
+                <span class="card-score-pill" style="${scoreBadgeVars(score)}"><strong>${score}</strong></span>
+              </div>
             </div>
             <span class="status-chip ${freshnessClass[item.freshness]}">${item.freshness}</span>
           </div>
