@@ -1335,10 +1335,10 @@ function updateScoreDeltasFromSnapshot() {
       // ONLY track and show deltas of 3 points or more to reduce noise
       if (Math.abs(diff) >= 3) {
         state.scoreDeltaMap[id] = diff;
-        // Persist this indicator for 30 minutes
+        // Persist this indicator for 30 seconds
         setTimeout(() => {
           delete state.scoreDeltaMap[id];
-        }, 1800000);
+        }, 30000);
       }
     }
   });
