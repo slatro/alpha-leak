@@ -1339,12 +1339,13 @@ function playNotificationTone(kind = "new") {
   const start = ctx.currentTime + 0.01;
   const notes = kind === "high"
     ? [
-      { freq: 880, dur: 0.08, gain: 0.12 },
-      { freq: 1244, dur: 0.11, gain: 0.15, offset: 0.085 },
+      { freq: 440, dur: 0.12, gain: 0.15 },
+      { freq: 659.25, dur: 0.15, gain: 0.12, offset: 0.1 },
+      { freq: 880, dur: 0.2, gain: 0.1, offset: 0.2 },
     ]
     : [
-      { freq: 698, dur: 0.07, gain: 0.08 },
-      { freq: 932, dur: 0.06, gain: 0.06, offset: 0.06 },
+      { freq: 880, dur: 0.08, gain: 0.1 },
+      { freq: 1174.66, dur: 0.1, gain: 0.12, offset: 0.06 },
     ];
   notes.forEach((note) => {
     const osc = ctx.createOscillator();
@@ -1390,9 +1391,9 @@ function emitOpportunityNotifications() {
     playNotificationTone("new");
     showCopyToast(label, 30000);
   } else {
-    // Check for FRESH significant score increases in existing tokens (at least +3 pts)
+    // Check for FRESH significant score increases in existing tokens (at least +2 pts)
     const currentDeltas = Object.entries(state.scoreDeltaMap)
-      .filter(([id, diff]) => diff >= 3 && notificationState.knownTokenIds.has(id));
+      .filter(([id, diff]) => diff >= 2 && notificationState.knownTokenIds.has(id));
 
     if (currentDeltas.length) {
       const [id, diff] = currentDeltas[0];

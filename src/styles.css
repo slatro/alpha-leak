@@ -871,8 +871,9 @@ h3 {
 #toastProgressBar {
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, #63ef9d, #82d8ff);
-  box-shadow: 0 0 12px rgba(130, 216, 255, 0.5);
+  background: linear-gradient(90deg, #63ef9d, #82d8ff, #ff6d88);
+  box-shadow: 0 0 16px rgba(130, 216, 255, 0.6);
+  border-radius: 0 4px 4px 0;
 }
 
 .copy-toast.is-visible {
