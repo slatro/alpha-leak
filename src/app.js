@@ -2283,12 +2283,11 @@ function rankedItems() {
     .filter((item) => !state.watchlistMode || isWatched(item.id))
     .filter(matchesSelectedFilters);
   const sorted = filtered.sort((a, b) => compareBySort(a, b, currentSortKey()));
-  const strict = sorted.filter(harshAlphaEligible);
-  const base = strict.length ? strict : sorted;
+  const base = sorted;
   if (state.activeModule === "tokens" || state.activeModule === "nfts") {
     const stronger = base.filter((item) => adjustedScore(item) >= 58);
     if (stronger.length >= 6) return stronger.slice(0, moduleResultCap(state.activeModule));
-    const viable = base.filter((item) => adjustedScore(item) >= 50);
+    const viable = base.filter((item) => adjustedScore(item) >= 40);
     if (viable.length) return viable.slice(0, moduleResultCap(state.activeModule));
   }
   return base.slice(0, moduleResultCap(state.activeModule));
