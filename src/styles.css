@@ -2074,6 +2074,15 @@ main {
     rgba(14, 11, 11, 0.96);
 }
 
+.alpha-card.is-elite-start {
+  border: 1px solid rgba(245, 208, 107, 0.45);
+  box-shadow: 0 0 28px rgba(245, 208, 107, 0.2), 0 18px 46px rgba(0, 0, 0, 0.26);
+  background: 
+    linear-gradient(135deg, rgba(245, 208, 107, 0.16), transparent 44%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)),
+    rgba(14, 13, 10, 0.96);
+}
+
 .alpha-card.is-alpha-zone::before {
   content: '';
   position: absolute;
@@ -2083,6 +2092,18 @@ main {
   height: 2px;
   background: linear-gradient(90deg, transparent, #ff6b6b, transparent);
   animation: surge-scan 2.5s linear infinite;
+  z-index: 5;
+}
+
+.alpha-card.is-elite-start::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f5d06b, transparent);
+  animation: surge-scan 3s linear infinite;
   z-index: 5;
 }
 
@@ -2108,6 +2129,23 @@ main {
   animation: pulse-surge 2s ease-in-out infinite;
 }
 
+.elite-start-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4px 10px;
+  background: #f5d06b;
+  color: #000;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  font-weight: 900;
+  border-bottom-left-radius: 8px;
+  box-shadow: 0 4px 14px rgba(245, 208, 107, 0.4);
+  z-index: 10;
+  letter-spacing: 0.04em;
+  animation: pulse-surge 2.5s ease-in-out infinite;
+}
+
 @keyframes pulse-surge {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.88; transform: scale(1.04); }
@@ -2118,6 +2156,13 @@ main {
   color: #ff8e8e;
   border: 1px solid rgba(255, 107, 107, 0.35);
   box-shadow: 0 0 12px rgba(255, 107, 107, 0.1);
+}
+
+.signal-tag.is-elite {
+  background: rgba(245, 208, 107, 0.15);
+  color: #f5d06b;
+  border: 1px solid rgba(245, 208, 107, 0.35);
+  box-shadow: 0 0 12px rgba(245, 208, 107, 0.1);
 }
 
 .alpha-card:hover {

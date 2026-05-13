@@ -1857,9 +1857,13 @@ function buildLiveToken(pair, index) {
   
   const vol1h = pair.volume?.h1 || 0;
   const volLiqRatio = liquidity > 0 ? vol1h / liquidity : 0;
-  const isAlphaZone = ageMinutes <= 25 && volLiqRatio > 0.35;
   
-  const score = Math.max(52, Math.min(95, Math.round(56 + volumePressure + buyPressure + trustBoost + (continuation.reclaimScore * 0.45) + (isAlphaZone ? 12 : 0) - crowdPenalty - riskPenalty)));
+  // Alpha Zone only if volume is actually meaningful (e.g. > $10k)
+  const isAlphaZone = ageMinutes <= 25 && volLiqRatio > 0.35 && vol1h >= 10000;
+  // Elite Start only for serious professional volume ($30k+)
+  const isEliteStart = ageMinutes <= 15 && vol1h >= 30000;
+  
+  const score = Math.max(52, Math.min(95, Math.round(56 + volumePressure + buyPressure + trustBoost + (continuation.reclaimScore * 0.45) + (isAlphaZone ? 12 : 0) + (isEliteStart ? 18 : 0) - crowdPenalty - riskPenalty)));
   
   const sourceLinks = [
     { label: `DEX ${pair.baseToken.symbol.toUpperCase()}`, url: pair.url },
@@ -1873,23 +1877,26 @@ function buildLiveToken(pair, index) {
     name: pair.baseToken.name,
     symbol: pair.baseToken.symbol,
     imageUrl: pair.info?.imageUrl || pair.info?.openGraph,
-    category: `${chainLabel(pair.chainId)} · ${isAlphaZone ? "ALPHA ZONE SURGE" : liveTokenTheme(pair)}`,
+    category: `${chainLabel(pair.chainId)} · ${isEliteStart ? "ELITE PRO LAUNCH" : (isAlphaZone ? "ALPHA ZONE SURGE" : liveTokenTheme(pair))}`,
     score,
     isAlphaZone,
+    isEliteStart,
     freshness: early,
-    action: isAlphaZone ? "RAPID ENTRY" : (score > 87 && crowdLevel < 54 ? "Research Now" : score > 74 && continuation.reclaimLike ? "Research Now" : score > 76 ? "Small Entry Only" : risk > 88 ? "Watch" : "Watch"),
+    action: isEliteStart ? "HIGH CONVICTION" : (isAlphaZone ? "RAPID ENTRY" : (score > 87 && crowdLevel < 54 ? "Research Now" : score > 74 && continuation.reclaimLike ? "Research Now" : score > 76 ? "Small Entry Only" : risk > 88 ? "Watch" : "Watch")),
     firstSeen: pair.pairCreatedAt ? `pair ${minutesAgo(pair.pairCreatedAt)} old` : "live pair",
     crowd: crowdLevel,
     xSignal: publicSignal,
     walletSignal,
     risk,
     liquidity: `${money(volume)} volume`,
-    volumeSpike: isAlphaZone ? "EXTREME VOLUME VELOCITY DETECTED" : (publicSignal > 62 ? "mentions and orderflow are both building" : "wallet flow is leading public discovery"),
+    volumeSpike: isEliteStart ? "PROFESSIONAL VOLUME DETECTED" : (isAlphaZone ? "EXTREME VOLUME VELOCITY DETECTED" : (publicSignal > 62 ? "mentions and orderflow are both building" : "wallet flow is leading public discovery")),
     discord: "N/A",
     guides: 0,
-    thesis: isAlphaZone 
-      ? `RAPID VOLUME SURGE: This token is exploding in its first minutes. Volume/Liquidity ratio is ${volLiqRatio.toFixed(2)}, indicating heavy conviction.`
-      : `${early} ${chainLabel(pair.chainId)} setup: wallet flow is ${walletSignal > crowdLevel ? "still ahead of crowd" : "close to public attention"}, and the setup is ${risk > 80 ? "higher risk because liquidity is thin" : "tradeable if flow keeps holding"}.`,
+    thesis: isEliteStart 
+      ? `ELITE START: This token launched with massive backing ($${money(vol1h)} in first mins). High probability of a professional team or market maker behind the scenes.`
+      : (isAlphaZone 
+          ? `RAPID VOLUME SURGE: This token is exploding in its first minutes. Volume/Liquidity ratio is ${volLiqRatio.toFixed(2)}, indicating heavy conviction.`
+          : `${early} ${chainLabel(pair.chainId)} setup: wallet flow is ${walletSignal > crowdLevel ? "still ahead of crowd" : "close to public attention"}, and the setup is ${risk > 80 ? "higher risk because liquidity is thin" : "tradeable if flow keeps holding"}.`),
     researchNote: isAlphaZone
       ? "ALPHA ZONE ALERT: High speed volume detected. Check contract security instantly and monitor orderbook for whale buys."
       : (continuation.reclaimLike
@@ -3432,15 +3439,15 @@ function cardMarkup(item, index) {
   const contract = (item.module === "tokens" || item.module === "analyzer") ? tokenContractAddress(item) : "";
   const guest = isGuestMode();
   return `
-    <article class="alpha-card ${item.isAlphaZone ? "is-alpha-zone" : ""}" data-card-id="${item.id}" data-module-theme="${item.module}" style="${themeVars(item.module)}">
-      ${item.isAlphaZone ? '<div class="alpha-zone-badge">ALPHA ZONE</div>' : ''}
+    <article class="alpha-card ${item.isEliteStart ? "is-elite-start" : (item.isAlphaZone ? "is-alpha-zone" : "")}" data-card-id="${item.id}" data-module-theme="${item.module}" style="${themeVars(item.module)}">
+      ${item.isEliteStart ? '<div class="elite-start-badge">ELITE START</div>' : (item.isAlphaZone ? '<div class="alpha-zone-badge">ALPHA ZONE</div>' : '')}
       <div class="card-main">
         <div class="card-title-row">
           <div class="card-identity">
             ${itemAvatar(item)}
             <div>
             <div class="card-kicker">
-              <span class="signal-tag ${item.isAlphaZone ? "is-rapid" : actionClass[item.action]}">${item.isAlphaZone ? "RAPID SURGE" : item.action}</span>
+              <span class="signal-tag ${item.isEliteStart ? "is-elite" : (item.isAlphaZone ? "is-rapid" : actionClass[item.action])}">${item.isEliteStart ? "HIGH CONVICTION" : (item.isAlphaZone ? "RAPID SURGE" : item.action)}</span>
               <em>${discoveryLabel(item)}</em>
             </div>
             <div class="card-name-line">

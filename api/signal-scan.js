@@ -32,12 +32,18 @@ function computeScore(pair) {
   let score = 35; 
 
   // 1. VOLUME VELOCITY (The Alpha Zone Trigger)
-  // If volume is high relative to liquidity in the first 15 mins, it's a massive signal.
   const volumeToLiqRatio = liq > 0 ? vol1h / liq : 0;
-  if (ageMin <= 15 && volumeToLiqRatio > 0.4) {
+  
+  // Alpha Zone only if volume is actually meaningful (e.g. > $10k)
+  if (ageMin <= 15 && volumeToLiqRatio > 0.4 && vol1h >= 10000) {
     score += 25; // Massive early conviction bonus
-  } else if (ageMin <= 30 && volumeToLiqRatio > 0.2) {
+  } else if (ageMin <= 30 && volumeToLiqRatio > 0.2 && vol1h >= 5000) {
     score += 15;
+  }
+  
+  // Elite Start (The "Big Team" Signal)
+  if (ageMin <= 15 && vol1h >= 30000) {
+    score += 20;
   }
 
   // 2. MOMENTUM SCORING
