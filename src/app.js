@@ -1298,11 +1298,14 @@ function updateScoreDeltasFromSnapshot() {
     const previous = notificationState.scoreSnapshot[id];
     if (typeof previous === "number" && previous !== score) {
       const diff = score - previous;
-      state.scoreDeltaMap[id] = diff;
-      // Persist this indicator for 30 minutes
-      setTimeout(() => {
-        delete state.scoreDeltaMap[id];
-      }, 1800000);
+      // ONLY track and show deltas of 3 points or more to reduce noise
+      if (Math.abs(diff) >= 3) {
+        state.scoreDeltaMap[id] = diff;
+        // Persist this indicator for 30 minutes
+        setTimeout(() => {
+          delete state.scoreDeltaMap[id];
+        }, 1800000);
+      }
     }
   });
   notificationState.scoreSnapshot = next;
@@ -1391,9 +1394,9 @@ function emitOpportunityNotifications() {
     const currentDeltas = Object.entries(state.scoreDeltaMap)
       .filter(([id, diff]) => diff >= 3 && notificationState.knownTokenIds.has(id));
 
-    // Only notify if this specific delta hasn't been notified yet
     if (currentDeltas.length) {
       const [id, diff] = currentDeltas[0];
+      // Create a key that unique identifies this specific score jump
       const notifiedKey = `surge:${id}:${diff}:${notificationState.scoreSnapshot[id]}`;
       
       if (notificationState.lastNotifiedKey !== notifiedKey) {
