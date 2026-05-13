@@ -1391,17 +1391,32 @@ function emitOpportunityNotifications() {
     playNotificationTone("new");
     showCopyToast(label, 30000);
   } else {
-    // Check for FRESH significant score increases in existing tokens (at least +2 pts)
+    // Check for FRESH significant score increases (at least +2 pts)
+    // CRITICAL: Only notify for tokens that would be VISIBLE in the current UI filter
     const currentDeltas = Object.entries(state.scoreDeltaMap)
-      .filter(([id, diff]) => diff >= 2 && notificationState.knownTokenIds.has(id));
+      .filter(([id, diff]) => {
+        if (diff < 2) return false;
+        const item = opportunities.find(o => o.id === id);
+        if (!item) return false;
+        
+        // Check if item passes the current UI filter
+        const score = adjustedScore(item);
+        if (state.filter === "high" && score < 70) return false;
+        if (state.filter === "medium" && (score < 40 || score >= 70)) return false;
+        if (state.filter === "low" && score >= 40) return false;
+        
+        return notificationState.knownTokenIds.has(id);
+      });
 
     if (currentDeltas.length) {
       const [id, diff] = currentDeltas[0];
-      // Create a key that unique identifies this specific score jump
-      const notifiedKey = `surge:${id}:${diff}:${notificationState.scoreSnapshot[id]}`;
+      const item = opportunities.find(o => o.id === id);
+      const score = adjustedScore(item);
+      
+      // Use a more robust key that includes the current score to detect if it's REALLY a new event
+      const notifiedKey = `surge:${id}:${diff}:${score}`;
       
       if (notificationState.lastNotifiedKey !== notifiedKey) {
-        const item = opportunities.find(o => o.id === id);
         if (item) {
           const label = `
             <div class="toast-header">ALPHA SURGE DETECTED</div>
