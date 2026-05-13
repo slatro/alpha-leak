@@ -1371,27 +1371,35 @@ function playNotificationTone(kind = "new") {
   if (!notificationState.audioUnlocked || !notificationState.audioContext) return;
   const ctx = notificationState.audioContext;
   const start = ctx.currentTime + 0.01;
+
+  // Premium Sound Palettes
   const notes = kind === "high"
-    ? [
-      { freq: 440, dur: 0.12, gain: 0.15 },
-      { freq: 659.25, dur: 0.15, gain: 0.12, offset: 0.1 },
-      { freq: 880, dur: 0.2, gain: 0.1, offset: 0.2 },
+    ? [ // Score Increase: Energetic ascending pluck
+      { freq: 523.25, dur: 0.15, gain: 0.12, type: "sine" },
+      { freq: 659.25, dur: 0.18, gain: 0.10, offset: 0.08, type: "sine" },
+      { freq: 783.99, dur: 0.22, gain: 0.08, offset: 0.16, type: "sine" },
     ]
-    : [
-      { freq: 880, dur: 0.08, gain: 0.1 },
-      { freq: 1174.66, dur: 0.1, gain: 0.12, offset: 0.06 },
+    : [ // New Alpha Found: Elegant Crystal Chime (Maj9-ish)
+      { freq: 880, dur: 0.25, gain: 0.12, type: "sine" },
+      { freq: 1174.66, dur: 0.3, gain: 0.08, offset: 0.04, type: "sine" },
+      { freq: 1760, dur: 0.4, gain: 0.05, offset: 0.12, type: "sine" }, // High shimmer
     ];
+
   notes.forEach((note) => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = "sine";
+    
+    osc.type = note.type || "sine";
     osc.frequency.setValueAtTime(note.freq, start + (note.offset || 0));
+    
+    // Smooth Envelope (Pluck/Chime effect)
     gain.gain.setValueAtTime(0.0001, start + (note.offset || 0));
-    gain.gain.exponentialRampToValueAtTime(note.gain, start + (note.offset || 0) + 0.01);
+    gain.gain.exponentialRampToValueAtTime(note.gain, start + (note.offset || 0) + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + (note.offset || 0) + note.dur);
+    
     osc.connect(gain).connect(ctx.destination);
     osc.start(start + (note.offset || 0));
-    osc.stop(start + (note.offset || 0) + note.dur + 0.02);
+    osc.stop(start + (note.offset || 0) + note.dur + 0.05);
   });
 }
 
