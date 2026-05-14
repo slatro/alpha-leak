@@ -453,7 +453,13 @@ function formatExactTime(timestamp) {
 }
 
 function detectedAt(item) {
-  return state.detectedRegistry[item.id] || 0;
+  const raw = state.detectedRegistry[item.id] || 0;
+  if (!raw) return 0;
+  // If it's an ISO string (like from MongoDB), convert to timestamp
+  if (typeof raw === "string" && raw.includes("-")) {
+    return new Date(raw).getTime();
+  }
+  return Number(raw);
 }
 
 function discoveryLabel(item) {
@@ -1297,7 +1303,18 @@ async function syncDiscoveryTimes() {
   try {
     const registry = await apiRequest("/api/discoveries", { method: "GET" });
     if (registry && typeof registry === "object") {
-      state.detectedRegistry = { ...state.detectedRegistry, ...registry };
+      const mapped = {};
+      Object.entries(registry).forEach(([rawId, ts]) => {
+        // Handle ID mapping: "solana:addr" -> "live-token-solana-addr"
+        if (rawId.includes(":")) {
+          const parts = rawId.split(":");
+          const chain = parts[0];
+          const addr = parts[1];
+          mapped[`live-token-${chain}-${addr}`] = ts;
+        }
+        mapped[rawId] = ts; // Keep original for other modules
+      });
+      state.detectedRegistry = { ...state.detectedRegistry, ...mapped };
       renderOpportunities();
     }
   } catch (err) {
