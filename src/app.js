@@ -1335,8 +1335,12 @@ async function init() {
   // Sync centralized times from MongoDB
   await syncDiscoveryTimes();
   
-  // Existing polling...
-  setInterval(refreshData, 30000);
+  // Update data polling
+  setInterval(async () => {
+    await refreshLiveTokens();
+    await syncDiscoveryTimes(); // Force re-sync after refresh to catch new scanner entries
+  }, 30000);
+
   setInterval(updateScoreDeltasFromSnapshot, 5000);
   setInterval(emitOpportunityNotifications, 5000);
 }
