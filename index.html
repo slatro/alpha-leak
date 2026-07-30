@@ -2,82 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Alpha Leak</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=JetBrains+Mono:wght@600;700;800&family=Orbitron:wght@600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./src/styles.css?v=120" />
+    <meta name="talentapp:project_verification" content="c76c15170c0ffce8f776c3def12db13639e0ddfadf5b0ddbd5023cbd1930cad6af468d90f9f3efa0e5d205e2cbbc019dd57f357dced9d78bf3d62afa4a0fa147" />
+    <title>alpha-leaks</title>
   </head>
   <body>
-    <div class="app-shell">
-      <header class="side-rail" aria-label="Alpha Leak navigation">
-        <div class="brand-lockup">
-          <a class="brand-mark" href="./assets/alpha-leak-logo.svg?v=117" target="_blank" rel="noreferrer" aria-label="Open Alpha Leak logo">
-            <img src="./assets/alpha-leak-logo.svg?v=117" alt="Alpha Leak logo" class="brand-logo-image" />
-          </a>
-          <div>
-            <p class="eyebrow brand-kicker">Private Engine</p>
-            <h1 class="brand-title"><span>Alpha</span><i>Leak</i></h1>
-          </div>
-        </div>
-
-        <button class="account-button auth-button" id="authButton" type="button"></button>
-
-        <div class="search-stack" id="searchStack">
-          <label class="search-shell" aria-label="Search">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-            <input id="tokenSearchInput" type="search" placeholder="Search token name or contract.." autocomplete="off" spellcheck="false" />
-            <span>⌘K</span>
-          </label>
-          <div class="search-dropdown" id="searchDropdown" aria-label="Token search results"></div>
-        </div>
-
-        <nav class="module-nav" id="moduleNav" aria-label="Radar modules"></nav>
-
-        <button class="watchlist-button" id="watchlistButton" type="button">
-          <span>Watchlist</span>
-          <strong>0</strong>
-        </button>
-
-        <section class="private-panel" aria-labelledby="privateModeTitle">
-          <div class="section-kicker">Private Mode</div>
-          <h2 id="privateModeTitle">Personal edge</h2>
-          <label class="field">
-            <span>Wallet watchlist</span>
-            <textarea id="walletWatchlist" rows="4" spellcheck="false"></textarea>
-          </label>
-          <div class="bias-stack" id="biasControls"></div>
-        </section>
-      </header>
-
-      <main>
-        <section class="decision-cockpit">
-          <div class="alpha-burst-strip" id="alphaBurstStrip" aria-label="High score alpha strip"></div>
-          <div class="cockpit-head">
-            <div>
-              <h3 class="cockpit-title" id="cockpitTitle">Today's Alpha Candidates</h3>
-              <i class="cockpit-title-line" aria-hidden="true"></i>
-            </div>
-            <div class="filter-cluster" id="filterCluster" aria-label="Opportunity filters"></div>
-          </div>
-
-          <div class="content-grid">
-            <section class="opportunity-list" id="opportunityList" aria-label="Ranked opportunities"></section>
-            <aside class="intel-drawer" id="intelDrawer" aria-label="Opportunity details"></aside>
-          </div>
-        </section>
-
-      </main>
-    </div>
-
-    <div class="detail-overlay" id="detailOverlay" aria-hidden="true"></div>
-    <div class="account-overlay" id="accountOverlay" aria-hidden="true">
-      <div class="account-modal-shell" id="accountModal"></div>
-    </div>
-
-    <div style="position: fixed; bottom: 10px; left: 10px; font-family: monospace; font-size: 10px; color: rgba(255,255,255,0.2); z-index: 10000; pointer-events: none;">v1.0.7-PROD</div>
-
-    <script type="module" src="./src/app.js?v=120"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

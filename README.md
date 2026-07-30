@@ -1,49 +1,73 @@
-# Alpha Leak
+# React + TypeScript + Vite
 
-Alpha Leak is a private alpha discovery engine prototype. The frontend still renders as a lightweight web app, but auth/profile/watchlist now have a real backend-ready API layer for Vercel deployment.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Run
+Currently, two official plugins are available:
 
-Static preview only:
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-```sh
-python3 -m http.server 4173
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-Full auth + backend preview:
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```sh
-npm install
-npx vercel dev
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-
-Open `http://127.0.0.1:4173`.
-
-## Structure
-
-- `index.html` defines the application shell.
-- `src/data.js` contains mock opportunities and smart-wallet records in future API-shaped objects.
-- `src/app.js` owns rendering, UI state, analyzer search, and client-side API orchestration.
-- `src/styles.css` contains the production UI system and responsive layout.
-- `api/` contains Vercel serverless functions for wallet auth, profile persistence, and watchlist persistence.
-- `db/schema.sql` defines the persistent backend tables.
-
-## Future API Boundaries
-
-The mock records are intentionally grouped around the feeds Alpha Leak will need later:
-
-- X intelligence: official accounts, founders, researchers, collectors, account quality, mention velocity, bot rate, influencer shill status.
-- Wallet intelligence: early entries, wallet type, copy risk, confirmation strength.
-- Crowd intelligence: Discord size and velocity, tutorial density, saturation status.
-- Market and mint intelligence: liquidity, floor, volume spikes, mint velocity, testnet or quest state.
-
-## Backend Environment
-
-Production expects:
-
-- `SESSION_SECRET`
-- either:
-  - `SUPABASE_URL`
-  - `SUPABASE_SERVICE_ROLE_KEY`
-
-If Supabase is not configured, API routes fall back to a local `/tmp` JSON store for development only.
