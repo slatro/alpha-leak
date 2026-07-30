@@ -385,7 +385,7 @@ export default function App() {
     <>
       <Layout 
         activeModule={activeModule} 
-        setActiveModule={setActiveModule}
+        setActiveModule={(module) => setActiveModule(module as ModuleType)}
         isBlurred={!!selectedOpportunity}
         watchlist={watchlist}
         onSelectOpportunity={setSelectedOpportunity}

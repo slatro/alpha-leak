@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
-import type { Freshness, Action, SignalLevel } from '../../lib/intelligence';
+import type { Freshness, ActionSuggestion as Action } from '../../engine/types';
+
+export type SignalLevel = 'high' | 'medium' | 'low';
 
 interface BadgeProps {
   children: ReactNode;

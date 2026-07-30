@@ -72,7 +72,7 @@ export interface WalletSignal {
   lastActivity: string;
 }
 
-export type ModuleType = 'token' | 'nft' | 'airdrop' | 'narrative' | 'wallet' | 'all';
+export type ModuleType = 'token' | 'nft' | 'airdrop' | 'narrative' | 'wallet' | 'all' | 'dashboard';
 
 export const tokenSignals: TokenOpportunity[] = [
   {
@@ -430,7 +430,7 @@ export const discoverNewAssets = async (currentData: Opportunity[]): Promise<Opp
   const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
   // REAL ALPHA POOL: Verified projects to prevent "nonsense" generation
-  const realTokenPool: Partial<TokenOpportunity>[] = [
+  const realTokenPool: (Partial<TokenOpportunity> & { twitter?: string })[] = [
     { name: 'Virtual Protocol', ticker: 'VIRTUAL', chain: 'Base', address: '0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b', twitter: 'virtuals_io', thesis: 'AI agent infra leader on Base. Institutional accumulation.' },
     { name: 'ai16z', ticker: 'AI16Z', chain: 'Solana', address: 'HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC', twitter: 'ai16zdao', thesis: 'First AI-managed VC fund. Massive social momentum.' },
     { name: 'Zerebro AI', ticker: 'ZEREBRO', chain: 'Solana', address: '8x5VqbHA8D7NkD52uNuS5nnt3PwA8pLD34ymskeSo2Wn', twitter: 'zerebro_ai', thesis: 'AI agent narrative cross-chain. Top tier degen signal.' },
@@ -439,7 +439,7 @@ export const discoverNewAssets = async (currentData: Opportunity[]): Promise<Opp
     { name: 'Act I : Prophecy', ticker: 'ACT', chain: 'Solana', address: 'GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump', twitter: 'act_i_prophecy', thesis: 'AI agent ecosystem framework. Large social following.' }
   ];
 
-  const realNFTPool: Partial<NFTOpportunity>[] = [
+  const realNFTPool: (Partial<NFTOpportunity> & { twitter?: string })[] = [
     { name: 'Abstract Origins', chain: 'Abstract', twitter: 'abstract_l2', thesis: 'First party NFT play on Abstract L2. Massive whitelist competition.' },
     { name: 'ApeBond Nodes', chain: 'Arbitrum', twitter: 'ApeBond', thesis: 'Node-based NFT utility. High yield institutional accumulation.' },
     { name: 'Monad Ghost Nodes', chain: 'Monad', twitter: 'monad_xyz', thesis: 'Official Monad ecosystem play. High social pulse.' },

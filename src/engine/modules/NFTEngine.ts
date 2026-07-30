@@ -36,7 +36,7 @@ export class NFTDiscoveryEngine {
           capturedAt: Date.now()
         },
         freshness: determineFreshness(firstSeen, crowdSaturation),
-        crowdState: saturation > 70 ? 'Mainstream' : 'Early Public',
+        crowdState: crowdSaturation > 70 ? 'Mainstream' : 'Early Public',
         scores: {
           ...scoreInputs,
           compositeAlpha

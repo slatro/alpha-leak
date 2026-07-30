@@ -4,6 +4,7 @@ interface ScoreRingProps {
   score: number;
   size?: number;
   strokeWidth?: number;
+  color?: string;
 }
 
 export function ScoreRing({ score, size = 60, strokeWidth = 4, color }: ScoreRingProps) {
